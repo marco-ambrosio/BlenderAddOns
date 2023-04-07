@@ -9,6 +9,7 @@ import os
 import shutil
 from glob import glob
 from string import Template
+import string
 
 import bpy
 from bpy_extras.io_utils import ExportHelper
@@ -81,7 +82,7 @@ class GazeboModel:
         ''' Execute all the operations to export a model for Gazebo 11 '''
         
         self.base_path = bpy.path.abspath('//')
-        self.model_name = bpy.path.basename(bpy.context.blend_data.filepath).rstrip('.blend')
+        self.model_name = bpy.path.basename(bpy.context.blend_data.filepath)[:-6]
         if not overwrite:
             ''' do something to avoid overwriting an already exported model '''
             pass
@@ -127,18 +128,19 @@ class GazeboModel:
         unpacked = False
         for img in bpy.data.images:
             if img.source == 'FILE':
+                name = img.name.rstrip(string.digits + '.')
                 if img.packed_file is not None:
                     unpacked = True
                     img.unpack()
                     img.pack()
                     
                     shutil.copy2(
-                        bpy.path.abspath(f'//textures/{img.name}'),
-                        os.path.join(self.meshes_folder, img.name))   
+                        os.path.join(bpy.path.abspath('//textures'), name),
+                        os.path.join(self.meshes_folder, name))   
                 else:
                     shutil.copy2(
                         bpy.path.abspath(img.filepath),
-                        os.path.join(self.meshes_folder, img.name))
+                        os.path.join(self.meshes_folder, name))
 
         # clean unpacked textures
         if unpacked:
