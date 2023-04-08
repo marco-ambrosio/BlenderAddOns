@@ -2,6 +2,10 @@
 
 This is a collection of Blender AddOns I've written. They are all licensed under the MIT license.
 
+## Installation
+
+Compress the folder of the desired add-on in a .zip file. In Blender, go to `Edit - Preferences - Add-ons - Install...` and select the .zip file.
+
 ## AddOns
 
 - [ExportGazeboModel](#ExportGazeboModel)
