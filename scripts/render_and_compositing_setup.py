@@ -2,9 +2,18 @@
 This script will setup Renderer and Compositing node to export Scene with Depth and Segmentation based on Object Pass Indexes
 """
 import bpy
+import math
 
+# Set camera with Realsense D435 Color Parameters (sensor OV2740)
 bpy.context.scene.render.resolution_x = 640
 bpy.context.scene.render.resolution_y = 480
+camera = bpy.data.cameras["Camera"]
+camera.sensor_fit = 'HORIZONTAL'
+camera.sensor_width = 2.7288
+camera.sensor_height = 1.5498 
+camera.clip_end = 20.0 # camera maximum distance
+camera.lens_unit = 'FOV'
+camera.angle = math.radians(77.0)
 
 # Enable use of nodes in the compositor
 bpy.context.scene.use_nodes = True
