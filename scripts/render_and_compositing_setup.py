@@ -11,6 +11,7 @@ bpy.context.scene.use_nodes = True
 tree = bpy.context.scene.node_tree
 
 # Enable Depth and Object Index passes
+bpy.data.scenes["Scene"].render.engine = "CYCLES"
 view_layer = bpy.context.scene.view_layers["ViewLayer"]
 view_layer.use_pass_z = True  # Enable Depth pass
 view_layer.use_pass_object_index = True  # Enable Object Index pass
@@ -46,26 +47,28 @@ file_output.file_slots["Depth"].format.color_depth = '16'
 
 # Change Segmentation output format to OpenEXR
 file_output.file_slots["Segmentation"].use_node_format = False
-file_output.file_slots["Segmentation"].format.file_format = 'OPEN_EXR'
-file_output.file_slots["Segmentation"].format.color_mode = 'RGB'
+file_output.file_slots["Segmentation"].format.file_format = 'TIFF'
+file_output.file_slots["Segmentation"].format.color_mode = 'BW'
 file_output.file_slots["Segmentation"].format.color_depth = '16'
 
-## Create Divide Math node for normalizing depth
-#divide_node = tree.nodes.new(type="CompositorNodeMath")
-#divide_node.operation = 'DIVIDE'
-#divide_node.inputs[1].default_value = 255.0
-#divide_node.location = (0, -200)
+## Create Divide Math node for normalizing segmentation
+divide_node = tree.nodes.new(type="CompositorNodeMath")
+divide_node.operation = 'DIVIDE'
+divide_node.inputs[1].default_value = 2 ** 16 - 1 # max possible value for a uint16
+divide_node.location = (0, -200)
 
 # Link nodes
 links = tree.links
 links.new(render_layers.outputs["Image"], composite.inputs["Image"])  # Image to Composite
-links.new(render_layers.outputs["Image"], file_output.inputs[0])  # Image to File Output
-links.new(render_layers.outputs["Depth"], file_output.inputs[1])  # Depth to File Output
+links.new(render_layers.outputs["Image"], file_output.inputs["Image"])  # Image to File Output
+links.new(render_layers.outputs["Depth"], file_output.inputs["Depth"])  # Depth to File Output
 
 # Link Object Index (Segmentation)
-links.new(render_layers.outputs["IndexOB"], file_output.inputs[2])  # Segment (Object Index)
+#links.new(render_layers.outputs["IndexOB"], file_output.inputs["Segmentation"])  # Segment (Object Index)
+links.new(render_layers.outputs["IndexOB"], divide_node.inputs[0])
+links.new(divide_node.outputs[0], file_output.inputs["Segmentation"])
 
-# Demo - Render one frame
-# import os
-# file_output.base_path = os.path.expanduser(os.path.join("~", "OneDrive", "Desktop", "prova"))
-# bpy.ops.render.render(write_still=True)
+## Demo - Render one frame
+#import os
+#file_output.base_path = os.path.expanduser(os.path.join("~", "Desktop", "prova"))
+#bpy.ops.render.render(write_still=True)
